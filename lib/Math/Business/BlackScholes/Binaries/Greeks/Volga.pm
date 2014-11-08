@@ -1,26 +1,27 @@
-package BOM::Utility::Math::Greeks::Volga;
-use strict;
-use warnings;
+package Math::Business::BlackScholes::Binaries::Greeks::Volga;
+use strict; use warnings;
 
-use BOM::Utility::Math::Greeks::Vega;
-use BOM::Utility::Math::Routines qw( dgauss );
+our $VERSION = '0.02';
+
+use Math::Business::BlackScholes::Binaries;
+use Math::Business::BlackScholes::Binaries::Greeks::Vega;
+use Math::Business::BlackScholes::Binaries::Greeks::Math qw( dgauss );
 use Math::CDF qw( pnorm );
 use Math::Trig;
-use Math::Business::BlackScholes::Binaries;
 
 =head1 NAME 
 
-	Volga
+Math::Business::BlackScholes::Binaries::Greeks::Volga
 
 =head1 DESCRIPTION
 
-	Gets the Volga for different options, Vanilla and Foreign for all our bet types
+Gets the Volga for different options, Vanilla and Foreign for all our bet types
 
 =cut
 
-=head2 vanilla_call
+=head1 SUBROUTINES
 
-vanilla_call
+See L<Math::Business::BlackScholes::Binaries::Greeks>
 
 =cut
 
@@ -30,17 +31,11 @@ sub vanilla_call {
     my $d1 = (log($S / $K) + ($mu + $vol * $vol / 2.0) * $t) / ($vol * sqrt($t));
     my $d2 = $d1 - ($vol * sqrt($t));
 
-    my $vega = BOM::Utility::Math::Greeks::Vega::vanilla_call($S, $K, $t, $r_q, $mu, $vol);
+    my $vega = Math::Business::BlackScholes::Binaries::Greeks::Vega::vanilla_call($S, $K, $t, $r_q, $mu, $vol);
 
     my $volga = $vega * $d1 * $d2 / $vol;
     return $volga;
 }
-
-=head2 vanilla_put
-
-vanilla_put
-
-=cut
 
 sub vanilla_put {
     my ($S, $K, $t, $r_q, $mu, $vol) = @_;
@@ -48,12 +43,6 @@ sub vanilla_put {
     # Same as volga of vanilla call (because vega_vanilla_call = vega_vanilla_put)
     return vanilla_call($S, $K, $t, $r_q, $mu, $vol);
 }
-
-=head2 call
-
-call
-
-=cut
 
 sub call {
     my ($S, $U, $t, $r_q, $mu, $vol) = @_;
@@ -65,23 +54,11 @@ sub call {
     return $volga;
 }
 
-=head2 put
-
-put
-
-=cut
-
 sub put {
     my ($S, $D, $t, $r_q, $mu, $vol) = @_;
 
     return -1 * call($S, $D, $t, $r_q, $mu, $vol);
 }
-
-=head2 expirymiss
-
-expirymiss
-
-=cut
 
 sub expirymiss {
     my ($S, $U, $D, $t, $r_q, $mu, $vol) = @_;
@@ -89,23 +66,11 @@ sub expirymiss {
     return call($S, $U, $t, $r_q, $mu, $vol) + put($S, $D, $t, $r_q, $mu, $vol);
 }
 
-=head2 expiryrange
-
-expiryrange
-
-=cut
-
 sub expiryrange {
     my ($S, $U, $D, $t, $r_q, $mu, $vol) = @_;
 
     return -1 * expirymiss($S, $U, $D, $t, $r_q, $mu, $vol);
 }
-
-=head2 onetouch
-
-onetouch
-
-=cut
 
 sub onetouch {
     my ($S, $U, $t, $r_q, $mu, $vol, $w) = @_;
@@ -152,12 +117,6 @@ sub onetouch {
     return exp(-$w * $r_q * $t) * ($part1 + $part2);
 }
 
-=head2 notouch
-
-notouch
-
-=cut
-
 sub notouch {
     my ($S, $U, $t, $r_q, $mu, $vol, $w) = @_;
 
@@ -171,12 +130,6 @@ sub notouch {
     return (-1 * onetouch($S, $U, $t, $r_q, $mu, $vol, $w));
 }
 
-=head2 upordown
-
-upordown
-
-=cut
-
 sub upordown {
     my ($S, $U, $D, $t, $r_q, $mu, $vol, $w) = @_;
 
@@ -186,12 +139,6 @@ sub upordown {
 
     return ot_up_ko_down_pelsser_1997($S, $U, $D, $t, $r_q, $mu, $vol, $w) + ot_down_ko_up_pelsser_1997($S, $U, $D, $t, $r_q, $mu, $vol, $w);
 }
-
-=head2 w_common_function_pelsser_1997
-
-w_common_function_pelsser_1997
-
-=cut
 
 sub w_common_function_pelsser_1997 {
     my ($S, $U, $D, $t, $r_q, $mu, $vol, $w, $eta) = @_;
@@ -291,12 +238,6 @@ sub w_common_function_pelsser_1997 {
     return $d2c_domega2;
 }
 
-=head2 ot_up_ko_down_pelsser_1997
-
-ot_up_ko_down_pelsser_1997
-
-=cut
-
 sub ot_up_ko_down_pelsser_1997 {
     my ($S, $U, $D, $t, $r_q, $mu, $vol, $w) = @_;
 
@@ -306,7 +247,7 @@ sub ot_up_ko_down_pelsser_1997 {
     my $omega  = ($vol * $vol);
 
     my $c = Math::Business::BlackScholes::Binaries::common_function_pelsser_1997($S, $U, $D, $t, $r_q, $mu, $vol, $w, 1);
-    my $dc_domega = BOM::Utility::Math::Greeks::Vega::w_common_function_pelsser_1997($S, $U, $D, $t, $r_q, $mu, $vol, $w, 1);
+    my $dc_domega = Math::Business::BlackScholes::Binaries::Greeks::Vega::w_common_function_pelsser_1997($S, $U, $D, $t, $r_q, $mu, $vol, $w, 1);
     my $d2c_domega2 = w_common_function_pelsser_1997($S, $U, $D, $t, $r_q, $mu, $vol, $w, 1);
 
     my $Vu = Math::Business::BlackScholes::Binaries::ot_up_ko_down_pelsser_1997($S, $U, $D, $t, $r_q, $mu, $vol, $w);
@@ -323,12 +264,6 @@ sub ot_up_ko_down_pelsser_1997 {
     return (4 * $vol * $vol * $d2Vu_domega2) + (2 * $dVu_domega);
 }
 
-=head2 ot_down_ko_up_pelsser_1997
-
-ot_down_ko_up_pelsser_1997
-
-=cut
-
 sub ot_down_ko_up_pelsser_1997 {
     my ($S, $U, $D, $t, $r_q, $mu, $vol, $w) = @_;
 
@@ -338,7 +273,7 @@ sub ot_down_ko_up_pelsser_1997 {
     my $omega  = ($vol * $vol);
 
     my $c = Math::Business::BlackScholes::Binaries::common_function_pelsser_1997($S, $U, $D, $t, $r_q, $mu, $vol, $w, 0);
-    my $dc_domega = BOM::Utility::Math::Greeks::Vega::w_common_function_pelsser_1997($S, $U, $D, $t, $r_q, $mu, $vol, $w, 0);
+    my $dc_domega = Math::Business::BlackScholes::Binaries::Greeks::Vega::w_common_function_pelsser_1997($S, $U, $D, $t, $r_q, $mu, $vol, $w, 0);
     my $d2c_domega2 = w_common_function_pelsser_1997($S, $U, $D, $t, $r_q, $mu, $vol, $w, 0);
 
     my $Vl = Math::Business::BlackScholes::Binaries::ot_down_ko_up_pelsser_1997($S, $U, $D, $t, $r_q, $mu, $vol, $w);
@@ -355,12 +290,6 @@ sub ot_down_ko_up_pelsser_1997 {
     return (4 * $vol * $vol * $d2Vl_domega2) + (2 * $dVl_domega);
 }
 
-=head2 range
-
-range
-
-=cut
-
 sub range {
     my ($S, $U, $D, $t, $r_q, $mu, $vol, $w) = @_;
 
@@ -371,3 +300,4 @@ sub range {
 }
 
 1;
+
