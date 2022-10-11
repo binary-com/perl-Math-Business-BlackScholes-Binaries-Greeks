@@ -4,7 +4,7 @@ use warnings;
 
 # ABSTRACT: calculate the sensitivity of the price of binary options
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 1;
 
